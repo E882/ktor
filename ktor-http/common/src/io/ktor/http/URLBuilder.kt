@@ -61,6 +61,21 @@ public class URLBuilder(
 
     private fun <A : Appendable> appendTo(out: A): A {
         out.append(protocol.name)
+
+        when (protocol.name) {
+            "file" -> {
+                out.append(":///")
+                out.append(host)
+                return out
+            }
+            "mailto" -> {
+                out.append(":")
+                out.append(userAndPassword)
+                out.append(host)
+                return out
+            }
+        }
+
         out.append("://")
         out.append(authority)
 
@@ -136,6 +151,21 @@ public data class Url(
 
     override fun toString(): String = buildString {
         append(protocol.name)
+
+        when (protocol.name) {
+            "file" -> {
+                append(":///")
+                append(host)
+                return@buildString
+            }
+            "mailto" -> {
+                append(":")
+                append(userAndPassword)
+                append(host)
+                return@buildString
+            }
+        }
+
         append("://")
         append(authority)
         append(fullPath)
@@ -149,19 +179,42 @@ public data class Url(
     public companion object
 }
 
+internal val Url.userAndPassword: String
+    get() = buildString {
+        if (user == null) {
+            return@buildString
+        }
+
+        append(user.encodeURLParameter())
+        if (password != null) {
+            append(':')
+            append(password.encodeURLParameter())
+        }
+
+        append("@")
+    }
+
+internal val URLBuilder.userAndPassword: String
+    get() = buildString {
+        val userValue = user ?: return@buildString
+        append(userValue.encodeURLParameter())
+
+        val passwordValue = password
+        if (passwordValue != null) {
+            append(':')
+            append(passwordValue.encodeURLParameter())
+        }
+
+        append("@")
+    }
+
 /**
  * [Url] authority.
  */
 public val Url.authority: String
     get() = buildString {
-        if (user != null) {
-            append(user.encodeURLParameter())
-            if (password != null) {
-                append(':')
-                append(password.encodeURLParameter())
-            }
-            append('@')
-        }
+        append(userAndPassword)
+
         if (specifiedPort == DEFAULT_PORT) {
             append(host)
         } else {

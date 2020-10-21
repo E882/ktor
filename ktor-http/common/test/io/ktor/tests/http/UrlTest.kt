@@ -153,7 +153,10 @@ class UrlTest {
     @Test
     fun testPortRange() {
         fun testPort(n: Int) {
-            assertEquals(n, Url(URLProtocol.HTTP, "localhost", n, "/", parametersOf(), "", null, null, false).specifiedPort)
+            assertEquals(
+                n,
+                Url(URLProtocol.HTTP, "localhost", n, "/", parametersOf(), "", null, null, false).specifiedPort
+            )
         }
 
         // smallest port value
@@ -185,5 +188,24 @@ class UrlTest {
             assertEquals(null, user)
             assertEquals(null, password)
         }
+    }
+
+    @Test
+    fun testForFileProtocol() {
+        val expectedUrl = "file:///var/www"
+        val result = Url(expectedUrl);
+        assertEquals(result.toString(), expectedUrl);
+        assertEquals(result.protocol.name, "file");
+    }
+
+    @Test
+    fun testForMailProtocol() {
+        val expectedUrl = "mailto:abc@xyz.io"
+        val resultUrl = Url(expectedUrl)
+
+        assertEquals(resultUrl.toString(), expectedUrl)
+        assertEquals(resultUrl.user, "abc")
+        assertEquals(resultUrl.host, "xyz.io")
+        assertEquals(resultUrl.protocol.name, "mailto");
     }
 }

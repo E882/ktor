@@ -41,6 +41,30 @@ internal fun URLBuilder.takeFromUnsafe(urlString: String): URLBuilder {
     val slashCount = count(urlString, startIndex, endIndex, '/')
     startIndex += slashCount
 
+    if (protocol.name == "file") {
+        require(slashCount == 3)
+        host = urlString.substring(startIndex, endIndex)
+        return this
+    }
+
+    if (protocol.name == "mailto") {
+        require(slashCount == 0)
+
+        val delimiter = urlString.indexOf("@", startIndex);
+        val passwordIndex = urlString.indexOfColonInHostPort(startIndex, delimiter)
+        if (delimiter < endIndex) {
+            if (passwordIndex != -1) {
+                user = urlString.substring(startIndex, passwordIndex)
+                password = urlString.substring(passwordIndex + 1, delimiter)
+            } else {
+                user = urlString.substring(startIndex, delimiter)
+            }
+            host = urlString.substring(delimiter + 1, endIndex);
+        }
+
+        return this
+    }
+
     if (slashCount >= 2) {
         loop@ while (true) {
             val delimiter = urlString.indexOfAny("@/\\?#".toCharArray(), startIndex).takeIf { it > 0 } ?: endIndex
@@ -60,7 +84,6 @@ internal fun URLBuilder.takeFromUnsafe(urlString: String): URLBuilder {
                 startIndex = delimiter
                 break@loop
             }
-
         }
     }
 
